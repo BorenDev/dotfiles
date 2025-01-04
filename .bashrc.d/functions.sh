@@ -9,6 +9,10 @@ gcr() {
   git clone --recursive "$@"
 }
 
+gsu() {
+  find . -name .git -exec sh -c "cd \"\$(dirname \"{}\")\"; printf \"|----- \"; pwd; git submodule update --init --recursive;" \;
+}
+
 #######################################
 # Traverse a directory, find git repos and submodules and perform the git action on each.
 # Arguments: Any git action to perform on any git repo/submodule discovered
@@ -190,6 +194,24 @@ rvim() {
     echo nvim +"$line" "$filepath"
     nvim +"$line" "$filepath"
   fi
+}
+
+#######################################
+# Create a python3 virtual env and activate the venv.
+# Arguments:
+#   Name for the venv
+#######################################
+pva() {
+  source ".venv_$1/bin/activate"
+}
+
+#######################################
+# Create a python3 virtual env and activate the venv.
+# Arguments:
+#   Name for the venv
+#######################################
+pvd() {
+  deactivate
 }
 
 #######################################
@@ -413,14 +435,43 @@ mkd() {
   cd "$1" || return
 }
 
-git_tarj() {
+tarp() {
   _date=$(date '+%Y%m%d_%H%M%S')
-  _git_dir=$(basename "$PWD")
+  _dir=$(basename "$PWD")
   pushd .. || true
-  tar cjf "${_git_dir}_${_date}.tar.bz2" "$_git_dir"
+  tar cjf "${_dir}_${_date}.tar.bz2" "$_dir"
   popd || true
+}
+
+tard() {
+  _date=$(date '+%Y%m%d_%H%M%S')
+  _dir=$(basename "$1")
+  tar cjf "${_dir}_${_date}.tar.bz2" "$_dir"
 }
 
 ttask() {
   tclock timer -d "$1" -M -e "paplay /usr/share/sounds/freedesktop/stereo/alarm-clock-elapsed.oga"
+}
+
+refresh_device() {
+  _DEV_PATH=$1
+  _confirmation="N"
+  read -rp "Wipe device [y/N]: $_DEV_PATH " _confirmation
+  if [ "$_confirmation" == "" ]; then
+    _confirmation="n"
+  fi
+  if [ "$_confirmation" == "y" ]; then
+    read -rp "Initialize GPT and filesystem? [y/N]: $_DEV_PATH " _confirmation
+    if [ "$_confirmation" == "" ]; then
+      _confirmation="n"
+    fi
+    echo "Refreshing $_DEV_PATH..."
+    sudo umount "$_DEV_PATH"*
+    sudo wipefs -a "$_DEV_PATH"
+    if [ "$_confirmation" == "y" ]; then
+      sudo sgdisk --clear "$_DEV_PATH"
+      sudo sgdisk -n 1:2048 -t 1:0700 -g "$_DEV_PATH" -p
+      sudo mkfs.exfat "$_DEV_PATH"1
+    fi
+  fi
 }

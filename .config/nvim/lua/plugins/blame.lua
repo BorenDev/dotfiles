@@ -1,5 +1,5 @@
 local M = {
-  "RaafatTurki/hex.nvim",
+  "FabijanZulj/blame.nvim",
   opts = {},
 }
 
